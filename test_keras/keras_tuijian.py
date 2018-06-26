@@ -8,7 +8,7 @@ from keras.layers import Embedding, Dropout, Dense, Merge, core
 k = 128
 base_url = "E:/Github/my_Keras_projects/test_keras/" # win
 # base_url = "" # linux
-ratings = pd.read_csv(base_url + "ml-1m/ratings.dat", sep= '::',names= ['user_id','movie_id', 'rating','timestamp'])
+ratings = pd.read_csv(base_url + "ml-1m/ratings.dat", sep='::', names=['user_id','movie_id', 'rating','timestamp'])
 n_users = np.max(ratings['user_id'])
 n_movies = np.max(ratings['movie_id'])
 print([n_users, n_movies, len(ratings)]) # ['userId', 'movieId', 100005]  
@@ -20,7 +20,7 @@ print(np.mean(ratings['rating']))
 # 第一个小网络，处理用户嵌入层
 model1 = Sequential()
 model1.add(Embedding(n_users + 1, k, input_length = 1))
-model1.add(core.Reshape((k,))) #keras.layers.core.Reshape
+model1.add(core.Reshape((k,)))  # keras.layers.core.Reshape
 
  # 第二个小网络，处理电影嵌入层
 model2 = Sequential()
