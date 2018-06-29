@@ -27,21 +27,38 @@ model2 = Sequential()
 model2.add(Embedding(n_movies +1 ,k, input_length = 1 ))
 model2.add(core.Reshape((k,)))
 
-# 第三个小网络，在第一，二个网络基础上叠加乘积运算
+# 第三个小网络，在第一，二个网络基础上把用户和电影向量结合在一起
 model = Sequential()
-model.add(merge([model1, model2], mode = 'dot', dot_axes= 1))
+model.add(Merge([model1, model2], mode = 'concat'))
+
+# 然后加入Dropout和relu这两个非线性变换项，构造多层深度模型
+model.add(Dropout(0.2))
+model.add(Dense(k, activation= 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(int(k/4), activation = 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(int(k/16), activation = 'relu'))
+model.add(Dropout(0.5))
+
+# 因为是预测连续变量评分，最后一层直接上线性变化。（当然，可以尝试分类问题，使用softmax去模拟每个评分类别的概率）
+model.add(Dense(1, activation = 'linear'))
 
 # 输出层和最后评分作对比，后向传播更新网络参数
 model.compile(loss = 'mse', optimizer = 'adam') 
 # 另外可以尝试 optimizer = 'rmsprop' 或 'adagrad'
 
-# 获取用户索引数据和电影索引数据，相应的特征矩阵X_train需要两个索引数据一起构造
+# 接下来要给模型输入训练数据
+# 首先，收集用户索引数据和电影索引数据
 users = ratings['user_id'].values
 movies = ratings['movie_id'].values
-X_train = [users, movies]
 
-# 评分数据
-y_train = ratings['rating'].values
+# 收集评分数据
+label = ratings['rating'].values
+
+# 构造训练数据
+X_train = [users, movies]
+y_train = label
+
 
 # 一切准备就绪，使用大小为100的小批量，使用50次迭代来更新权重。
 model.fit(X_train, y_train, batch_size= 100, epochs= 50)
@@ -57,4 +74,4 @@ sum = 0
 for i in range(ratings.shape[0]):
     sum += (ratings['rating'][i] - model.predict([np.array([ratings['user_id'][i]]), np.array([ratings['movie_id'][i]])]))**2
 mse = math.sqrt(sum/ratings.shape[0])
-print("mse = "+ mse)
+print(mse)
